@@ -22,6 +22,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 EventManager.getDefult().post(EventKey.EVENT_LEO_TEXT, "event", 3000);
                 EventManager.getDefult().post(EventKey.EVENT_LEO_TEXT2, "leo");
+
+
+
             }
         });
 
