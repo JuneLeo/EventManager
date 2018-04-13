@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 for (int i = 0; i < 100; i++) {
-                    ActivityEventManager.newInstance().post("leo","i="+i,0);
+                    ActivityEventManager.newInstance().post("leo","i="+i);
                 }
             }
         });
