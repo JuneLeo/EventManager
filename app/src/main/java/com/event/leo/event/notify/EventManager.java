@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Created by spf on 2017/9/6.
@@ -25,13 +26,15 @@ import java.util.concurrent.TimeUnit;
 public class EventManager {
 
     private static final String TAG = EventManager.class.getSimpleName();
-    private static EventManager instance;
+    private static EventManager INSTANCE;
     private List<Object> objects;
     private static ScheduledExecutorService executor;
+    private final Handler handler;
 
     public EventManager() {
         objects = new ArrayList<>();
-        executor = Executors.newScheduledThreadPool(4);
+        executor = Executors.newSingleThreadScheduledExecutor();
+        handler = new Handler(Looper.getMainLooper());
     }
 
     /**
@@ -40,14 +43,14 @@ public class EventManager {
      * @return
      */
     public static EventManager getDefult() {
-        if (instance == null) {
+        if (INSTANCE == null) {
             synchronized (EventManager.class) {
-                if (instance == null) {
-                    instance = new EventManager();
+                if (INSTANCE == null) {
+                    INSTANCE = new EventManager();
                 }
             }
         }
-        return instance;
+        return INSTANCE;
     }
 
 
@@ -98,8 +101,6 @@ public class EventManager {
                         if (!key.equals(annotation.key())) {
                             continue;
                         }
-
-                        final Handler handler = new Handler(Looper.getMainLooper());
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
@@ -110,9 +111,9 @@ public class EventManager {
                                     Log.e(TAG, object.getClass().getName() + " " + method.getName() + " at least one object");
                                 } catch (InvocationTargetException e) {
                                     e.printStackTrace();
-                                    Log.e(TAG, object.getClass().getName() + " " + method.getName() + " parameter type error");
+                                }catch (IllegalArgumentException e){
+                                    Log.e(TAG, object.getClass().getName() + " " + method.getName() + " parameter type error , must have a parameter");
                                 }
-                                handler.removeCallbacks(this);
                             }
                         });
                     }

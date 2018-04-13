@@ -11,5 +11,6 @@ import java.lang.annotation.Target;
 @Target(value = {ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Event {
+    EventType type() default EventType.Event_DEFAULT;
     String key() default "";
 }
