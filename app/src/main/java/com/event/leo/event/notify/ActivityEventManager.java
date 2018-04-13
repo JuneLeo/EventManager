@@ -16,13 +16,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by 宋鹏飞 on 2018/4/13.
+ * 选用阻塞队列 --  线程安全
+ * 阻塞队列，我们可以考虑使用take（）来获取，但是这样会有多个线程一直处于阻塞状态，所以放弃使用
  */
 
 public final class ActivityEventManager {
@@ -54,7 +53,12 @@ public final class ActivityEventManager {
         return INSTANCE;
     }
 
-    public void post(final String key, Object o, final long delay) {
+    /**
+     * 发送消息
+     * @param key
+     * @param o
+     */
+    public void post(final String key, Object o) {
         if (TextUtils.isEmpty(key) || null == o) {
             return;
         }
@@ -64,21 +68,21 @@ public final class ActivityEventManager {
         AsyncTask.THREAD_POOL_EXECUTOR.execute(new Runnable() {
             @Override
             public void run() {
-                if (BuildConfig.DEBUG){
+                if (BuildConfig.DEBUG) {
                     Log.e(TAG, Thread.currentThread().getName());
                 }
                 Pair<String, Object> event;
-                try {
-                    while ((event = notifyQueue.poll(delay, TimeUnit.MILLISECONDS)) != null) {
-                        dispatch(event);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                while ((event = notifyQueue.poll()) != null) {
+                    dispatch(event);
                 }
             }
         });
     }
 
+    /**
+     * 分发消息
+     * @param event
+     */
     private void dispatch(final Pair<String, Object> event) {
         for (final Object object : objects) {
             Method[] methods = object.getClass().getDeclaredMethods();
@@ -103,7 +107,7 @@ public final class ActivityEventManager {
                             Log.e(TAG, object.getClass().getName() + " " + method.getName() + " at least one object");
                         } catch (InvocationTargetException e) {
                             e.printStackTrace();
-                        }catch (IllegalArgumentException e){
+                        } catch (IllegalArgumentException e) {
                             Log.e(TAG, object.getClass().getName() + " " + method.getName() + " parameter type error , must have a parameter");
                         }
                     }
